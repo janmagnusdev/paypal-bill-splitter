@@ -10,16 +10,105 @@
 <body>
 <h1>Paypal Bill Splitter</h1>
 <label for="paypal-link-input">Your paypal.me link: </label>
-<input type="text" id="paypal-link-input" />
-<br>
-<label for="bill-1">First Bill: </label>
-<input type="text" id="bill-1" /><br>
+<input type="text" id="paypal-link-input" size="40" value="https://paypal.me/" />
+<div class="bill-wrap">
+    <label for="bill-1">Bill #1: </label>
+    <input type="text" id="bill-1" class="bill" data-bill-number="1" />
+</div>
 <button id="btn-add-bill">Add Bill</button>
 <button id="btn-go">Go!</button>
+<div class="result-links"></div>
+<button id="copy-button" hidden>Copy Links to Clipboard</button>
 </body>
+<style>
+    .result-links {
+        margin-top: 30px;
+    }
+
+    #paypal-link-input {
+        margin: 10px 0;
+    }
+
+    .bill {
+        display: block;
+        margin: 10px 0;
+    }
+</style>
 <script>
+const goButton = document.querySelector("#btn-go");
+const addBillButton = document.querySelector("#btn-add-bill");
+const copyButton = document.querySelector("#copy-button");
+let numberOfBills = 1;
 
+function addBill() {
+    const wrapDiv = document.querySelector(".bill-wrap");
+    numberOfBills++;
+    const billId = `bill-${numberOfBills}`;
+    const label = document.createElement("label");
+    label.htmlFor = billId;
+    label.textContent = `Bill #${numberOfBills}: `;
+    const newBill = document.createElement("input");
+    newBill.type = "text";
+    newBill.id = billId;
+    newBill.classList.add("bill");
+    newBill.dataset.billNumber = `${numberOfBills}`;
+    wrapDiv.appendChild(label);
+    wrapDiv.appendChild(newBill);
+}
 
+function generatePaypalLinks() {
+    const linkPrefix = document.querySelector("#paypal-link-input").value;
+    const bills = Array.from(document.querySelectorAll(".bill"));
+    const resultDiv = document.querySelector(".result-links");
+    const linkArray = [];
+
+    const billValues = bills.map(bill => bill.value);
+
+    const resultMessage = document.createElement("h4");
+    resultMessage.textContent = `${numberOfBills} Bills just for you!`
+    resultDiv.appendChild(resultMessage);
+
+    billValues.forEach(billValue => {
+        const linkText = `${linkPrefix}/${billValue}`;
+        let paypalLink = document.createElement("p");
+        paypalLink.textContent = linkText;
+        resultDiv.appendChild(paypalLink);
+        linkArray.push(linkText);
+    })
+    copyButton.hidden = false;
+    copyBillsToClipboard(linkArray);
+}
+
+function copyBillsToClipboard(billArray) {
+    const text = billArray.reduce((acc, curr) => {
+        return `${acc}${curr}\n`;
+    }, "");
+    console.log(text);
+    navigator.clipboard.writeText(text).then(function() {
+        console.log('Async: Copying to clipboard was successful!');
+        alert("Copying successful!");
+    }, function(err) {
+        console.error('Async: Could not copy text: ', err);
+    });
+}
+
+addBillButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    addBill();
+});
+
+goButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    generatePaypalLinks();
+})
+
+const onLoad = () => {
+   const bills = document.querySelectorAll(".bill");
+   for (let bill of bills) {
+       bill.value = "";
+   }
+};
+onLoad();
 
 </script>
 </html>
